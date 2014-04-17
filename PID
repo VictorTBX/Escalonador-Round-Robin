@@ -1,0 +1,33 @@
+package roundrobin;
+
+public class PID {
+
+    int chegada, duracao, executado, tempomedio;
+    String nome;
+    Operacoes operIO;   
+    
+    
+    public PID(String nome, int chegada, int duracao, Operacoes operIO) {
+        this.nome = nome;
+        this.chegada = chegada;
+        this.duracao = duracao;
+        this.operIO = operIO;
+        executado = 0;
+        tempomedio = 0;
+    }
+
+    public PID(String nome, int chegada, int duracao) {
+        this.nome = nome;
+        this.chegada = chegada;
+        this.duracao = duracao;
+        executado = 0;
+    }
+    
+    public void Imprimir() {
+        System.out.println("Processo: " +nome+ " | Chegada: " +chegada+ " | Duração: " +duracao);
+        System.out.print("Operações I/O: ");
+        operIO.imprimir();
+        System.out.println("");
+    }
+    
+}
