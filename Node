@@ -1,0 +1,36 @@
+package roundrobin;
+
+public class Node {
+    private PID elemento;
+    private Node proximo;
+    public Node(PID elemento, Node proximo) {
+        this.elemento = elemento;
+        this.proximo = proximo;
+    }  
+    
+    public Node(PID elemento) {
+        this.elemento = elemento;
+        this.proximo = null;
+    }
+    
+   @Override  
+    public String toString() { 
+        return String.valueOf(elemento.nome); 
+    }
+    
+    public void setElemento(PID elemento) {
+        this.elemento = elemento;
+    }
+    public PID getElemento() {
+        return elemento;
+    }
+    
+    public Node getProximo() {
+        return proximo;
+    }
+    
+    public void setProximo(Node proximo) {
+        this.proximo = proximo;
+    }      
+    
+}
