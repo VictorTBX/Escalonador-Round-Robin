@@ -1,0 +1,217 @@
+package roundrobin;
+
+//import com.sun.xml.internal.bind.v2.model.annotation.Quick;
+import java.util.Scanner;
+
+public class EscalonadorRoundRobin {
+
+    public static void addFila(ListaLigada l1, int timer, Fila fila) { //Na verdade fila
+        Node aux = l1.getBegin();
+        int index = 0;
+        while (aux != null) {
+            if (aux.getElemento().chegada == timer) {
+                fila.enqueue(aux.getElemento());
+                l1.remove(index);
+                index--;
+            }
+            aux = aux.getProximo();
+            index++;
+        }
+    }
+
+    public static void chegada(int[] timer, ListaLigada l1) {
+        Node aux = l1.getBegin();
+        int chegou = 1;
+        while (aux != null) {
+            if (aux.getElemento().chegada == timer[0]) {
+                chegou--;
+                if (chegou == 0) {
+                    System.out.print("chegada do(s) processo(s) ");
+                } else if (chegou < 0) {
+                    System.out.print(", ");
+                }
+                System.out.print(aux.getElemento().nome+"   ");
+            }
+            aux = aux.getProximo();
+        }
+    }
+
+    public static void imprimirFila(Fila fila) {
+        if (fila.size() > 0) {
+            System.out.print("Fila: ");
+            fila.imprimir();
+        } else {
+            System.out.println("Não há processos na fila.");
+        }
+    }
+
+    public static void simularMenor(PID cpu, int[] timer, ListaLigada l1, Fila fila, int quantum) throws InterruptedException {
+        int aux = cpu.duracao;
+        for (int i = 0; i < aux; i++) {
+            imprimirFila(fila);
+            System.out.println("CPU: " + cpu.nome);
+            System.out.println("");
+            timer[0]++;
+            fila.add();
+            cpu.duracao--;
+            cpu.executado++;
+            Thread.sleep(1000);
+            System.out.print("Tempo " + timer[0] + " ");
+            if (cpu.executado == cpu.operIO.front()) {
+                cpu.operIO.dequeue();
+                operIO(fila, cpu, timer, l1, quantum);
+                return;
+            }
+            if (i == aux - 1) {
+                System.out.print("fim do processo " + cpu.nome + " ");
+                timer[1] = timer[1] + cpu.tempomedio;
+                chegada(timer, l1);
+                System.out.println("");
+                addFila(l1, timer[0], fila);
+                if (!(fila.isEmpty())) {                    
+                    cpu = fila.front();
+                    fila.dequeue();
+                    if (cpu.duracao <= quantum) {
+                        simularMenor(cpu, timer, l1, fila, quantum);
+                        return;
+                    } else {
+                        simularMaior(cpu, timer, l1, fila, quantum);
+                        return;
+                    }
+                }
+                return;
+            }
+            chegada(timer, l1);
+            System.out.println("");
+            addFila(l1, timer[0], fila);
+        }
+    }
+
+    public static void simularMaior(PID cpu, int[] timer, ListaLigada l1, Fila fila, int quantum) throws InterruptedException {
+
+        for (int i = 0; i < quantum; i++) {
+            imprimirFila(fila);
+            System.out.println("CPU: " + cpu.nome);
+            System.out.println("");
+            fila.add();
+            cpu.duracao--;
+            cpu.executado++;
+            if (i < quantum - 1) {
+                Thread.sleep(1000);
+                timer[0]++;
+                System.out.print("Tempo " + timer[0] + " ");
+                chegada(timer, l1);
+                addFila(l1, timer[0], fila);
+                if (cpu.executado == cpu.operIO.front()) {
+                    cpu.operIO.dequeue();
+                    operIO(fila, cpu, timer, l1, quantum);
+                    return;
+                }
+                System.out.println("");
+            }
+
+        }
+        if (cpu.duracao > 0) 
+            fila.enqueue(cpu);        
+    }
+
+    public static void operIO(Fila fila, PID cpu, int[] timer, ListaLigada l1, int quantum) throws InterruptedException {
+        System.out.println("operação I/O de " + cpu.nome);
+        fila.enqueue(cpu);
+        cpu = fila.front();
+        fila.dequeue();
+        if (cpu.duracao <= quantum) 
+            simularMenor(cpu, timer, l1, fila, quantum);
+        else
+            simularMaior(cpu, timer, l1, fila, quantum);        
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        Scanner in = new Scanner(System.in);
+        Scanner in2 = new Scanner(System.in);
+
+        int chegada, duracao, quantum;
+        int[] timer = new int[2];
+        timer[0] = 0;
+        timer[1] = 0;        
+        String nome;
+        char resp;
+        PID cpu;
+
+        ListaLigada l1 = new ListaLigada();
+
+        System.out.println("Informe o valor do quantum:");
+        quantum = in2.nextInt();
+
+        do {
+
+            System.out.println("Informe o nome do processo:");
+            nome = in.nextLine();
+
+            System.out.println("Informe o tempo de chegada do processo:");
+            chegada = in2.nextInt();
+
+            System.out.println("Informe o tempo de duração do processo:");
+            duracao = in2.nextInt();
+
+            System.out.println("Informe o número de solicitações I/O realizadas pelo processo.");
+            int n = in2.nextInt();
+            Operacoes oper = new Operacoes(n + 1);
+            oper.enqueue(0);
+            if (n > 0) {
+                System.out.println("Informe os tempos de chegada I/O:");
+                for (int i = 0; i < n; i++) {
+                    oper.enqueue(in2.nextInt());
+                }
+            }
+            oper.dequeue();
+            oper.ordenar();
+            PID processo = new PID(nome, chegada, duracao, oper);
+            l1.addEnd(new Node(processo));
+
+            System.out.println("Deseja inserir mais um processo? (0 - Não / 1 - Sim)");
+            resp = in2.next().charAt(0);
+
+        } while (resp == '1');
+
+        int aux2 = l1.size();
+        System.out.println("");
+
+        Fila fila = new Fila(l1.size());
+
+        System.out.println("*******************************");
+        System.out.println("INICIO DA SIMULAÇÃO");
+        System.out.println("*******************************");
+
+        while (!(l1.isEmpty()) || !(fila.isEmpty())) {
+            if (l1.isEmpty()) {
+                if (fila.front().duracao == 0) {
+                    fila.dequeue();
+                }
+            }
+
+            System.out.print("Tempo " + timer[0] + " ");
+            chegada(timer, l1);
+            System.out.println("");
+            addFila(l1, timer[0], fila);
+            if (!(fila.isEmpty())) {
+                cpu = fila.front();
+                fila.dequeue();
+
+                if (cpu.duracao <= quantum) {
+                    simularMenor(cpu, timer, l1, fila, quantum);
+                } else {
+                    simularMaior(cpu, timer, l1, fila, quantum);
+                }
+            }
+            timer[0]++;
+            Thread.sleep(1000);
+        }
+        System.out.println("");
+        double tm = (timer[1]/aux2);
+        System.out.println("Tempo médio de espera: " +tm+ " ms");
+        System.out.println("*******************************");
+        System.out.println("FIM DA SIMULAÇÃO");
+        System.out.println("*******************************");
+    }
+}
