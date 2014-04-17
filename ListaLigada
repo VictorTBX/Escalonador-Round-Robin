@@ -1,0 +1,159 @@
+package roundrobin;
+
+public class ListaLigada {
+
+    private Node inicio;
+    private Node fim;
+    private int quantidade;
+
+    public ListaLigada() {
+        inicio = fim = null;
+        quantidade = 0;
+    }
+
+    /**
+     * @return verifica o tamanho
+     */
+    public int size() {
+        return quantidade;
+    }
+
+    /**
+     * @return verifica se está vazio
+     */
+    public boolean isEmpty() {
+        return inicio == null;
+    }
+
+    /**
+     * @return adiciona no fim
+     */
+    public void addEnd(Node novo) {
+        if (isEmpty()) {
+            inicio = novo;
+        } else {
+            fim.setProximo(novo);
+        }
+        fim = novo;
+        quantidade++;
+    }
+
+    /**
+     * @return adiciona o começo
+     */
+    public void addBegin(Node novo) {
+        if (isEmpty()) {
+            fim = novo;
+        } else {
+            novo.setProximo(inicio);
+        }
+        inicio = novo;
+        quantidade++;
+    }
+
+    public void add(Node novo, int posicao) {
+        if ((posicao >= quantidade) || (posicao < 0)) {
+            System.out.println("não acheei!");
+        } else {
+            if (posicao == 0) {
+                novo.setProximo(inicio);
+                inicio = novo;
+            } else {
+                Node aux = inicio;
+                for (int i = 0; i < posicao; i++) {
+                    aux = aux.getProximo();
+                }
+                if (aux.getProximo() != null) {
+                    novo.setProximo(aux);
+                } else {
+                    fim.setProximo(novo);
+                    fim = novo;
+                    novo.setProximo(null);
+                }
+                quantidade++;
+            }
+        }
+    }
+
+    public Node remove(int posicao) {
+        if ((posicao >= quantidade) || (posicao < 0)) {
+            return null;
+        } else {
+            Node aux = inicio;
+            if (posicao == 0) {
+                quantidade--;
+                inicio = inicio.getProximo();
+                return aux;
+            } else {
+                for (int i = 1; i < posicao; i++) {
+                    aux = aux.getProximo();
+                }
+                Node aux2 = aux.getProximo();
+                if (aux.getProximo().getProximo() != null) {
+                    quantidade--;
+                    aux.setProximo(aux.getProximo().getProximo());
+                    return aux2;
+                } else {
+                    quantidade--;
+                    aux.setProximo(null);
+                    return aux2;
+                }
+            }
+        }
+    }
+
+    public Node removeEnd() {
+        Node elemento = fim;
+        if (!isEmpty()) {
+            if (quantidade == 1) {
+                inicio = fim = null;
+            } else {
+                Node penultimo = inicio;
+                while (penultimo.getProximo() != fim) {
+                    penultimo = penultimo.getProximo();
+                }
+                fim = penultimo;
+                fim.setProximo(null);
+            }
+            quantidade--;
+        }
+        return elemento;
+    }
+
+    /**
+     * @return remove do começo
+     */
+    public Node removeBegin() {
+        Node elemento = inicio;
+        if (!isEmpty()) {
+            if (quantidade == 1) {
+                inicio = fim = null;
+            } else {
+                inicio = inicio.getProximo();
+            }
+            quantidade--;
+            return elemento;
+        }
+        return elemento;
+    }
+
+    public Node getBegin() {
+        return inicio;
+    }
+
+    public Node getEnd() {
+        return fim;
+    }
+
+    public void display() {
+        if (isEmpty()) {
+            System.out.println("Vazia!!");
+        }
+        Node aux = inicio;
+        for (int i = 0; i < quantidade; i++) {
+            System.out.print(aux.getElemento().nome + " ");
+            aux = aux.getProximo();
+        }
+        System.out.println();
+    }
+}
